@@ -55,27 +55,14 @@ public class SlackBuilder extends Recorder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        
-        
-        
-        System.out.println("Success");
-        System.out.println(channel);
-        System.out.println(token);
-        System.out.println(filePath);
         //To change body of generated methods, choose Tools | Templates.
         
         Runtime runtime = Runtime.getRuntime();
 
         try {
-            String loop = "for file in $(ls " + filePath + ");";
-            loop+="do ";
-//            loop += "if [[ $file =~ " + fileRegex+ " ]]; then ";
-//            String curlRequest = loop + "echo $file;";
-            String curlRequest = loop + "curl -F file=@$file -F channels=" + channel +" -F token=" + token + " https://slack.com/api/files.upload ;";
-            String loopDone = curlRequest + "done;";
-            System.out.println(loopDone);
+            String script = generateScript();
             
-            Process process = runtime.exec(new String[]{"/bin/bash", "-c", loopDone});
+            Process process = runtime.exec(new String[]{"/bin/bash", "-c", script});
             int resultCode = process.waitFor();
             String output = IOUtils.toString(process.getInputStream());
             String errorOutput = IOUtils.toString(process.getErrorStream());
@@ -94,6 +81,14 @@ public class SlackBuilder extends Recorder {
             System.out.println(cause.getMessage());
         }
         return true;
+    }
+
+    private String generateScript() {
+        String loop = "for file in $(ls " + filePath + ");";
+        loop+="do ";
+        String curlRequest = loop + "curl -F file=@$file -F channels=" + channel +" -F token=" + token + " https://slack.com/api/files.upload ;";
+        String loopDone = curlRequest + "done;";
+        return loopDone;
     }
 
     @Override
