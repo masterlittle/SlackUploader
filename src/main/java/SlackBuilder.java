@@ -4,27 +4,20 @@
  * and open the template in the editor.
  */
 
-
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleProject;
-import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Builder;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
-import hudson.util.StreamTaskListener;
-import hudson.views.ViewsTabBar;
-import hudson.views.ViewsTabBarDescriptor;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import net.sf.json.JSONObject;
-import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -39,15 +32,29 @@ public class SlackBuilder extends Recorder {
     private final String channel;
     private final String token;
     private final String filePath;
+    private static final String CHOICE_OF_SHELL = "/bin/bash";
     
     @DataBoundConstructor
     public SlackBuilder(String channel, String token, String filePath) {
+        super();
         this.channel = channel;
         this.token = token;
         this.filePath = filePath;
-        System.out.println("Entry");
     }
 
+    public String getChannel() {
+        return channel;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public String getToken() {
+        return token;
+    }
+    
+    
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
@@ -56,32 +63,28 @@ public class SlackBuilder extends Recorder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         //To change body of generated methods, choose Tools | Templates.
-        
+        LogOutput log = new LogOutput();
         Runtime runtime = Runtime.getRuntime();
+        Process process = null;
 
         try {
             String script = generateScript();
             
-            Process process = runtime.exec(new String[]{"/bin/bash", "-c", script});
-            int resultCode = process.waitFor();
-            String output = IOUtils.toString(process.getInputStream());
-            String errorOutput = IOUtils.toString(process.getErrorStream());
-            System.out.println("is: " + output);
-            System.out.println("es: " + errorOutput);
+            process = runScript(runtime, script);
             
-            listener.getLogger().print(output);
-            listener.getLogger().print(errorOutput);
-            
-//            if (resultCode == 0) {
-                // all is good
-//            } 
+            log.logOutput(listener, process);
         } catch (Throwable cause) {
-    // process cause
-            System.out.println(cause.getCause() + "\n");
-            System.out.println(cause.getMessage());
+            log.logOutput(listener, process);
         }
         return true;
     }
+
+    private Process runScript(Runtime runtime, String script) throws IOException {
+        Process process = runtime.exec(new String[]{CHOICE_OF_SHELL, "-c", script});
+        return process;
+    }
+
+    
 
     private String generateScript() {
         String loop = "for file in $(ls " + filePath + ");";
@@ -93,18 +96,20 @@ public class SlackBuilder extends Recorder {
 
     @Override
     public BuildStepDescriptor getDescriptor() {
-        return (BuildDescriptor)super.getDescriptor(); //To change body of generated methods, choose Tools | Templates.
+        SlackBuilderDescriptor slackBuilderDescriptor = (SlackBuilderDescriptor)super.getDescriptor(); //To change body of generated methods, choose Tools | Templates.
+        return slackBuilderDescriptor;
     }
     
     
     @Extension
-    public static final class BuildDescriptor extends BuildStepDescriptor<Publisher> {
+    public static final class SlackBuilderDescriptor extends BuildStepDescriptor<Publisher> {
         
         private String channel;
         private String token;
-        private String path;
+        private String filePath;
         
-        public BuildDescriptor(){
+        public SlackBuilderDescriptor(){
+            System.out.println("Entered BuildStep Constructor");
             load();
         }
 
@@ -115,7 +120,6 @@ public class SlackBuilder extends Recorder {
 
         @Override
         public String getDisplayName() {
-            System.out.println("Middle");
             return "Post files to Slack";
         }
 
@@ -151,13 +155,11 @@ public class SlackBuilder extends Recorder {
         }
 
         @Override
-        public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
-            channel = json.getString("channel");
-            token = json.getString("token");
-            path = json.getString("fielPath");
-            
-            save();
-            return super.configure(req, json);
+        public SlackBuilder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+            String channel = req.getParameter("channel");
+            String token = req.getParameter("token");
+            String filePath = req.getParameter("filePath");
+            return new SlackBuilder(channel, token, filePath);
         }
 
         public String getChannel() {
@@ -168,8 +170,8 @@ public class SlackBuilder extends Recorder {
             return token;
         }
 
-        public String getPath() {
-            return path;
+        public String getFilePath() {
+            return filePath;
         }
         
     }
