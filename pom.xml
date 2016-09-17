@@ -4,8 +4,10 @@
     <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.609.1</version>
+    <version>2.2</version>
   </parent>
+  
+  
 
   <repositories>
     <repository>
@@ -16,10 +18,31 @@
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>SlackBuilder</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <name>Slack Upload Plugin</name>
+    <description>A post-build uploader that uploads files to slack generated during build process</description>
+<!--    <url>http://wiki.jenkins-ci.org/display/JENKINS/Slack+Uploader</url>-->
     <packaging>hpi</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
+    
+    <developers>
+        <developer>
+            <id>masterlittle</id>
+            <name>Shitij Goyal</name>
+            <email>goyalshitij@gmail.com</email>
+            <url>https://github.com/masterlittle</url>
+            <roles>
+                <role>maintainer</role>
+            </roles>
+            <timezone>India/Kolkata</timezone>
+        </developer>
+    </developers>
+
+   <properties>
+  	 <compile.java.version>1.7</compile.java.version>
+    	 <hudson.plugin.version>1</hudson.plugin.version>
+   </properties>
 </project>

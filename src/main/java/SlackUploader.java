@@ -27,7 +27,7 @@ import org.kohsuke.stapler.StaplerResponse;
  *
  * @author Shitij
  */
-public class SlackBuilder extends Recorder {
+public class SlackUploader extends Recorder {
    
     private final String channel;
     private final String token;
@@ -35,7 +35,7 @@ public class SlackBuilder extends Recorder {
     private static final String CHOICE_OF_SHELL = "/bin/bash";
     
     @DataBoundConstructor
-    public SlackBuilder(String channel, String token, String filePath) {
+    public SlackUploader(String channel, String token, String filePath) {
         super();
         this.channel = channel;
         this.token = token;
@@ -96,20 +96,19 @@ public class SlackBuilder extends Recorder {
 
     @Override
     public BuildStepDescriptor getDescriptor() {
-        SlackBuilderDescriptor slackBuilderDescriptor = (SlackBuilderDescriptor)super.getDescriptor(); //To change body of generated methods, choose Tools | Templates.
+        SlackUploaderDescriptor slackBuilderDescriptor = (SlackUploaderDescriptor)super.getDescriptor(); //To change body of generated methods, choose Tools | Templates.
         return slackBuilderDescriptor;
     }
     
     
     @Extension
-    public static final class SlackBuilderDescriptor extends BuildStepDescriptor<Publisher> {
+    public static final class SlackUploaderDescriptor extends BuildStepDescriptor<Publisher> {
         
         private String channel;
         private String token;
         private String filePath;
         
-        public SlackBuilderDescriptor(){
-            System.out.println("Entered BuildStep Constructor");
+        public SlackUploaderDescriptor(){
             load();
         }
 
@@ -155,11 +154,11 @@ public class SlackBuilder extends Recorder {
         }
 
         @Override
-        public SlackBuilder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public SlackUploader newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             String channel = req.getParameter("channel");
             String token = req.getParameter("token");
             String filePath = req.getParameter("filePath");
-            return new SlackBuilder(channel, token, filePath);
+            return new SlackUploader(channel, token, filePath);
         }
 
         public String getChannel() {
